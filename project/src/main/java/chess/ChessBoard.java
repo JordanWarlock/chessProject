@@ -4,6 +4,9 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import com.github.bhlangonijr.chesslib.Board;
+import com.github.bhlangonijr.chesslib.BoardEvent;
+import com.github.bhlangonijr.chesslib.BoardEventListener;
+import com.github.bhlangonijr.chesslib.BoardEventType;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.Rank;
 import com.github.bhlangonijr.chesslib.Side;
@@ -89,7 +92,28 @@ public class ChessBoard extends JFrame {
         }
     }
 
+    class MyBoardListener implements BoardEventListener {
+
+        @Override
+        public void onEvent(BoardEvent event) {
+
+            if (event.getType() == BoardEventType.ON_MOVE) {
+                if (boardState.isMated()) {
+                    if (boardState.getSideToMove() == Side.BLACK) {
+                        SwingUtilities.invokeLater(() -> new ResultScreen(c, "White"));
+                    } else {
+                        SwingUtilities.invokeLater(() -> new ResultScreen(c, "Black"));
+                    }
+                } else if (boardState.isDraw()) {
+                    SwingUtilities.invokeLater(() -> new ResultScreen(c, "Draw"));
+                }
+            }
+        }
+    }
+
+    private JFrame c = this;
     private JPanel chessBoard;
+    private Board boardState;
     private final int initialTileSize = 8;
     private final Color lightSquareColor = new Color(235, 236, 208);
     private final Color darkSquareColor = new Color(119, 148, 85);
@@ -97,20 +121,28 @@ public class ChessBoard extends JFrame {
     private final Color selectionColor = Color.YELLOW;
     private int currentTileSize = initialTileSize;
     private SquareLabel[][] allLabels;
-    private Board boardState = null;
     private String highlightedPiecePosition = "";
     private Map<Character, BufferedImage> pieceImageMap = new HashMap<>();
     Piece piece = null;
     private Piece selectedPiece = null;
+    private Mode mode = null;
+    private String lastHumanMove = null;
+    private String moveString = "";
+    private String stockFishMove = "";
 
-    public ChessBoard() {
+    public ChessBoard(Mode mode) {
         setTitle("Chess Board");
         setMinimumSize(new Dimension(minWindowSize, minWindowSize));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        this.mode = mode;
+        StockFishHandler.startStockfish("project/src/stockfish/stockfish-windows-x86-64-avx2.exe");
 
         chessBoard = new JPanel(new GridLayout(initialTileSize, initialTileSize));
         add(chessBoard);
+
+        boardState = new Board();
+        boardState.addEventListener(BoardEventType.ON_MOVE, new MyBoardListener());
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentResized(java.awt.event.ComponentEvent evt) {
@@ -135,6 +167,14 @@ public class ChessBoard extends JFrame {
         requestFocus();
         initBoard();
         setVisible(true);
+        if (mode == Mode.PVE_EASY_BLACK || mode == Mode.PVE_MEDIUM_BLACK || mode == Mode.PVE_HARD_BLACK) {
+            String StockFishMove = StockFishHandler.getStockfishMove(lastHumanMove);
+            stockFishMove = StockFishMove;
+            Move move = parseStockFishMove(StockFishMove);
+            boardState.doMove(move);
+            moveString += stockFishMove + " ";
+            updateBoard(boardState.toString());
+        }
     }
 
     private void loadPieceImages() {
@@ -274,26 +314,78 @@ public class ChessBoard extends JFrame {
             String chessPosition = getChessPosition(row, col);
             piece = boardState.getPiece(Square.valueOf(chessPosition));
 
-            if (clickedSquare.isHighlighted) {
-                makeMove(highlightedPiecePosition, chessPosition);
-                clearHighlightedSquares();
-            } else if (clickedSquare.getPieceImage() != null && clickedSquare.getBackground() != selectionColor
-                    && piece.getPieceSide() == boardState.getSideToMove()) {
-                clearHighlightedSquares();
-                clickedSquare.setBackground(selectionColor);
-                highlightLegalMovesForPiece(chessPosition);
-                highlightedPiecePosition = chessPosition;
+            if (mode == Mode.PVP) {
+                if (clickedSquare.isHighlighted) {
+                    makeMove(highlightedPiecePosition, chessPosition);
+                    lastHumanMove = null;
+                    lastHumanMove += highlightedPiecePosition + chessPosition;
+                    clearHighlightedSquares();
+                } else if (clickedSquare.getPieceImage() != null && clickedSquare.getBackground() != selectionColor
+                        && piece.getPieceSide() == boardState.getSideToMove()) {
+                    clearHighlightedSquares();
+                    lastHumanMove = null;
+                    lastHumanMove += highlightedPiecePosition + chessPosition;
+                    clickedSquare.setBackground(selectionColor);
+                    highlightLegalMovesForPiece(chessPosition);
+                    highlightedPiecePosition = chessPosition;
+                } else {
+                    clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                    clearHighlightedSquares();
+                }
             } else {
-                clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
-                clearHighlightedSquares();
+                if (mode == Mode.PVE_EASY_WHITE || mode == Mode.PVE_MEDIUM_WHITE || mode == Mode.PVE_HARD_WHITE) {
+                    if (boardState.getSideToMove() == Side.WHITE) {
+                        if (clickedSquare.isHighlighted) {
+                            makeMove(highlightedPiecePosition, chessPosition);
+                            clearHighlightedSquares();
+                            lastHumanMove = "";
+                            lastHumanMove += highlightedPiecePosition.toLowerCase() + chessPosition.toLowerCase();
+                            moveString += lastHumanMove + " ";
+                            stockFishMove = StockFishHandler.getStockfishMove(moveString);
+                            moveString += stockFishMove + " ";
+                            Move move = parseStockFishMove(stockFishMove);
+                            boardState.doMove(move);
+                            updateBoard(boardState.toString());
+
+                        } else if (clickedSquare.getPieceImage() != null
+                                && clickedSquare.getBackground() != selectionColor) {
+                            clearHighlightedSquares();
+                            clickedSquare.setBackground(selectionColor);
+                            highlightLegalMovesForPiece(chessPosition);
+                            highlightedPiecePosition = chessPosition;
+                        } else {
+                            clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                            clearHighlightedSquares();
+                        }
+                    }
+                } else {
+                    if (boardState.getSideToMove() == Side.BLACK) {
+                        if (clickedSquare.isHighlighted) {
+                            makeMove(highlightedPiecePosition, chessPosition);
+                            clearHighlightedSquares();
+                            lastHumanMove = "";
+                            lastHumanMove += highlightedPiecePosition.toLowerCase() + chessPosition.toLowerCase();
+                            moveString += lastHumanMove + " ";
+                            stockFishMove = StockFishHandler.getStockfishMove(moveString);
+                            moveString += stockFishMove + " ";
+                            Move move = parseStockFishMove(stockFishMove);
+                            boardState.doMove(move);
+                            updateBoard(boardState.toString());
+                        } else if (clickedSquare.getPieceImage() != null
+                                && clickedSquare.getBackground() != selectionColor
+                                && piece.getPieceSide() == boardState.getSideToMove()) {
+                            clearHighlightedSquares();
+                            clickedSquare.setBackground(selectionColor);
+                            highlightLegalMovesForPiece(chessPosition);
+                            highlightedPiecePosition = chessPosition;
+                        } else {
+                            clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                            clearHighlightedSquares();
+                        }
+                    }
+                }
             }
 
-            if (boardState.isMated()) {
-                System.out.println("Checkmate!");
-            } else if (boardState.isDraw()) {
-                System.out.println("Draw!");
-            }
-            System.out.println("Clicked square's chess position: " + chessPosition);
         }
     }
 
@@ -318,7 +410,8 @@ public class ChessBoard extends JFrame {
 
     }
 
-    public void makeMove(String fromPosition, String toPosition) {
+    private void makeMove(String fromPosition, String toPosition) {
+
         Move move = new Move(Square.valueOf(fromPosition), Square.valueOf(toPosition));
         Side currentSide = boardState.getSideToMove();
         if (isPromoRank(currentSide, move)) {
@@ -328,6 +421,36 @@ public class ChessBoard extends JFrame {
         boardState.doMove(move);
         updateBoard(boardState.toString());
         System.out.println(boardState.toString());
+    }
+
+    private Move parseStockFishMove(String moveString) {
+        if (moveString.length() == 4) {
+            String fromPosition = moveString.substring(0, 2).toUpperCase();
+            String toPosition = moveString.substring(2, 4).toUpperCase();
+            return new Move(Square.valueOf(fromPosition), Square.valueOf(toPosition));
+        } else if (moveString.length() == 5) {
+            String fromPosition = moveString.substring(0, 2).toUpperCase();
+            String toPosition = moveString.substring(2, 4).toUpperCase();
+            String promotion = moveString.substring(4, 5).toUpperCase();
+            Piece promotionPiece = null;
+            switch (promotion) {
+                case "Q":
+                    promotionPiece = Piece.WHITE_QUEEN;
+                    break;
+                case "N":
+                    promotionPiece = Piece.WHITE_KNIGHT;
+                    break;
+                case "B":
+                    promotionPiece = Piece.WHITE_BISHOP;
+                    break;
+                case "R":
+                    promotionPiece = Piece.WHITE_ROOK;
+                    break;
+            }
+            return new Move(Square.valueOf(fromPosition), Square.valueOf(toPosition), promotionPiece);
+        } else {
+            throw new IllegalArgumentException("Invalid move string length");
+        }
     }
 
     private Piece showPromotionDialog(Side currentSide) {
@@ -442,9 +565,5 @@ public class ChessBoard extends JFrame {
         int col = (chessPosition.charAt(0) - 'A'); // Assuming 'A' to 'H' for columns
         int row = (8 - Character.getNumericValue(chessPosition.charAt(1)));
         return new int[] { row, col };
-    }
-
-    public void setBoardState(Board b) {
-        this.boardState = b;
     }
 }
