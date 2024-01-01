@@ -14,9 +14,8 @@ public class MainMenu extends JFrame {
     public MainMenu() {
         setTitle("Main Menu");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1920, 1080));
+        setMinimumSize(new Dimension(1280, 720));
 
-        // Set frame size to 80% of the screen size
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int width = (int) (screenSize.width / 5);
         int height = (int) (screenSize.height / 5);
@@ -88,6 +87,7 @@ public class MainMenu extends JFrame {
             ImageIcon resizedIcon = new ImageIcon(resizedLogo);
             JLabel logoLabel = new JLabel(resizedIcon);
             GridBagConstraints gbc = new GridBagConstraints();
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.insets = new Insets(0, 0, 0, 0);
             gbc.gridx = 0;
             gbc.gridy = 0;
@@ -103,7 +103,6 @@ public class MainMenu extends JFrame {
         setVisible(true);
     }
 
-    // Method to load an image icon from the file path
     protected ImageIcon createImageIcon(String path) {
         URL imgURL = getClass().getResource(path);
         if (imgURL != null) {

@@ -1,12 +1,13 @@
 //StockFishHandler.startStockfish("C:\\Users\\farar\\OneDrive\\Desktop\\SC-Project\\project\\src\\stockfish\\stockfish-windows-x86-64-avx2.exe");
 //System.out.println(StockFishHandler.getStockfishMove("e2e4"));
 package chess;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class StockFishHandler{
+public class StockFishHandler {
     private static Process stockfishProcess;
     private static BufferedReader stockfishInput;
     private static OutputStreamWriter stockfishOutput;

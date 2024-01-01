@@ -23,6 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.random.RandomGenerator;
 import java.util.List;
 
 public class ChessBoard extends JFrame {
@@ -168,12 +171,16 @@ public class ChessBoard extends JFrame {
         initBoard();
         setVisible(true);
         if (mode == Mode.PVE_EASY_BLACK || mode == Mode.PVE_MEDIUM_BLACK || mode == Mode.PVE_HARD_BLACK) {
-            String StockFishMove = StockFishHandler.getStockfishMove(lastHumanMove);
-            stockFishMove = StockFishMove;
-            Move move = parseStockFishMove(StockFishMove);
-            boardState.doMove(move);
-            moveString += stockFishMove + " ";
-            updateBoard(boardState.toString());
+            if (mode == Mode.PVE_EASY_BLACK || mode == Mode.PVE_MEDIUM_BLACK) {
+                makeRandomMove();
+            } else {
+                String StockFishMove = StockFishHandler.getStockfishMove(lastHumanMove);
+                stockFishMove = StockFishMove;
+                Move move = parseStockFishMove(StockFishMove);
+                boardState.doMove(move);
+                moveString += stockFishMove + " ";
+                updateBoard(boardState.toString());
+            }
         }
     }
 
@@ -335,58 +342,91 @@ public class ChessBoard extends JFrame {
             } else {
                 if (mode == Mode.PVE_EASY_WHITE || mode == Mode.PVE_MEDIUM_WHITE || mode == Mode.PVE_HARD_WHITE) {
                     if (boardState.getSideToMove() == Side.WHITE) {
-                        if (clickedSquare.isHighlighted) {
-                            makeMove(highlightedPiecePosition, chessPosition);
-                            clearHighlightedSquares();
-                            lastHumanMove = "";
-                            lastHumanMove += highlightedPiecePosition.toLowerCase() + chessPosition.toLowerCase();
-                            moveString += lastHumanMove + " ";
-                            stockFishMove = StockFishHandler.getStockfishMove(moveString);
-                            moveString += stockFishMove + " ";
-                            Move move = parseStockFishMove(stockFishMove);
-                            boardState.doMove(move);
-                            updateBoard(boardState.toString());
+                        if (mode == Mode.PVE_HARD_WHITE) {
+                            if (clickedSquare.isHighlighted) {
+                                makeMove(highlightedPiecePosition, chessPosition);
+                                clearHighlightedSquares();
+                                makeAIMove(highlightedPiecePosition, chessPosition);
 
-                        } else if (clickedSquare.getPieceImage() != null
-                                && clickedSquare.getBackground() != selectionColor) {
-                            clearHighlightedSquares();
-                            clickedSquare.setBackground(selectionColor);
-                            highlightLegalMovesForPiece(chessPosition);
-                            highlightedPiecePosition = chessPosition;
+                            } else if (clickedSquare.getPieceImage() != null
+                                    && clickedSquare.getBackground() != selectionColor) {
+                                clearHighlightedSquares();
+                                clickedSquare.setBackground(selectionColor);
+                                highlightLegalMovesForPiece(chessPosition);
+                                highlightedPiecePosition = chessPosition;
+                            } else {
+                                clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                                clearHighlightedSquares();
+                            }
                         } else {
-                            clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
-                            clearHighlightedSquares();
+                            if (clickedSquare.isHighlighted) {
+                                makeMove(highlightedPiecePosition, chessPosition);
+                                clearHighlightedSquares();
+                                makeRandomMove();
+
+                            } else if (clickedSquare.getPieceImage() != null
+                                    && clickedSquare.getBackground() != selectionColor) {
+                                clearHighlightedSquares();
+                                clickedSquare.setBackground(selectionColor);
+                                highlightLegalMovesForPiece(chessPosition);
+                                highlightedPiecePosition = chessPosition;
+                            } else {
+                                clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                                clearHighlightedSquares();
+                            }
                         }
                     }
                 } else {
                     if (boardState.getSideToMove() == Side.BLACK) {
-                        if (clickedSquare.isHighlighted) {
-                            makeMove(highlightedPiecePosition, chessPosition);
-                            clearHighlightedSquares();
-                            lastHumanMove = "";
-                            lastHumanMove += highlightedPiecePosition.toLowerCase() + chessPosition.toLowerCase();
-                            moveString += lastHumanMove + " ";
-                            stockFishMove = StockFishHandler.getStockfishMove(moveString);
-                            moveString += stockFishMove + " ";
-                            Move move = parseStockFishMove(stockFishMove);
-                            boardState.doMove(move);
-                            updateBoard(boardState.toString());
-                        } else if (clickedSquare.getPieceImage() != null
-                                && clickedSquare.getBackground() != selectionColor
-                                && piece.getPieceSide() == boardState.getSideToMove()) {
-                            clearHighlightedSquares();
-                            clickedSquare.setBackground(selectionColor);
-                            highlightLegalMovesForPiece(chessPosition);
-                            highlightedPiecePosition = chessPosition;
+                        if (mode == Mode.PVE_HARD_BLACK) {
+                            if (clickedSquare.isHighlighted) {
+                                makeMove(highlightedPiecePosition, chessPosition);
+                                clearHighlightedSquares();
+                                makeAIMove(highlightedPiecePosition, chessPosition);
+                            } else if (clickedSquare.getPieceImage() != null
+                                    && clickedSquare.getBackground() != selectionColor
+                                    && piece.getPieceSide() == boardState.getSideToMove()) {
+                                clearHighlightedSquares();
+                                clickedSquare.setBackground(selectionColor);
+                                highlightLegalMovesForPiece(chessPosition);
+                                highlightedPiecePosition = chessPosition;
+                            } else {
+                                clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                                clearHighlightedSquares();
+                            }
                         } else {
-                            clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
-                            clearHighlightedSquares();
+                            if (clickedSquare.isHighlighted) {
+                                makeMove(highlightedPiecePosition, chessPosition);
+                                clearHighlightedSquares();
+                                makeRandomMove();
+                            } else if (clickedSquare.getPieceImage() != null
+                                    && clickedSquare.getBackground() != selectionColor
+                                    && piece.getPieceSide() == boardState.getSideToMove()) {
+                                clearHighlightedSquares();
+                                clickedSquare.setBackground(selectionColor);
+                                highlightLegalMovesForPiece(chessPosition);
+                                highlightedPiecePosition = chessPosition;
+                            } else {
+                                clickedSquare.setBackground((row + col) % 2 == 0 ? lightSquareColor : darkSquareColor);
+                                clearHighlightedSquares();
+                            }
                         }
                     }
                 }
             }
 
         }
+    }
+
+    private void makeAIMove(String highlightedPiecePosition, String chessPosition) {
+        lastHumanMove = "";
+        lastHumanMove += highlightedPiecePosition.toLowerCase() + chessPosition.toLowerCase();
+        moveString += lastHumanMove + " ";
+        stockFishMove = StockFishHandler.getStockfishMove(moveString);
+        moveString += stockFishMove + " ";
+        Move move = parseStockFishMove(stockFishMove);
+        boardState.doMove(move);
+        updateBoard(boardState.toString());
     }
 
     private int findLabelIndex(JLabel label) {
@@ -565,5 +605,23 @@ public class ChessBoard extends JFrame {
         int col = (chessPosition.charAt(0) - 'A'); // Assuming 'A' to 'H' for columns
         int row = (8 - Character.getNumericValue(chessPosition.charAt(1)));
         return new int[] { row, col };
+    }
+
+    private void makeRandomMove() {
+        List<Move> legalMoves = boardState.legalMoves();
+        while (true) {
+            Random random = new Random();
+            int randomIndex = random.nextInt(legalMoves.size());
+            Move move = legalMoves.get(randomIndex);
+            if (boardState.getPiece(move.getFrom()).getPieceSide() == Side.BLACK) {
+                boardState.doMove(move);
+                updateBoard(boardState.toString());
+                break;
+            } else if (boardState.getPiece(move.getFrom()).getPieceSide() == Side.WHITE) {
+                boardState.doMove(move);
+                updateBoard(boardState.toString());
+                break;
+            }
+        }
     }
 }
