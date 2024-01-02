@@ -47,9 +47,9 @@ public class DifficultyMenu extends JFrame {
                 imagePath + "medium-icon.png");
         hardPanel = createPanel(imagePath + "hard-back.jpg", "Hard", hardDesc,
                 imagePath + "hard-icon.png");
-        easyPanel.addMouseListener(createMouseListener(easyPanel));
-        mediumPanel.addMouseListener(createMouseListener(mediumPanel));
-        hardPanel.addMouseListener(createMouseListener(hardPanel));
+        easyPanel.addMouseListener(createMouseListener(easyPanel, "EASY"));
+        mediumPanel.addMouseListener(createMouseListener(mediumPanel, "MEDIUM"));
+        hardPanel.addMouseListener(createMouseListener(hardPanel, "HARD"));
         easyPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         mediumPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         hardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
@@ -142,12 +142,16 @@ public class DifficultyMenu extends JFrame {
         }
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         button.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+        button.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> new ChooseSideMenu(title.toUpperCase()));
+            dispose();
+        });
         panel.add(button, BorderLayout.SOUTH);
 
         return panel;
     }
 
-    private MouseAdapter createMouseListener(JPanel panel) {
+    private MouseAdapter createMouseListener(JPanel panel, String title) {
         return new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -175,6 +179,12 @@ public class DifficultyMenu extends JFrame {
                     alpha = 0.0f;
                     panel.repaint();
                 }
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SwingUtilities.invokeLater(() -> new ChooseSideMenu(title));
+                dispose();
             }
         };
     }
