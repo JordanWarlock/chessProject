@@ -1,159 +1,181 @@
 package chess;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.net.URL;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class DifficultyMenu extends JFrame {
-    private JButton easyButton;
-    private JButton mediumButton;
-    private JButton hardButton;
-    private ImageIcon backgroundImage;
+    private JPanel easyPanel;
+    private JPanel mediumPanel;
+    private JPanel hardPanel;
+    private JPanel hoveredPanel;
+    private float alpha = 0.0f;
 
     public DifficultyMenu() {
         setTitle("Difficulty Menu");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1280, 720);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int width = (int) (screenSize.width / 5);
-        int height = (int) (screenSize.height / 5);
-        backgroundImage = createImageIcon("img/other/chess-background.png");
+        setLayout(new GridLayout(1, 3)); // Divide the frame into 3 columns
+        String easyDesc = "Tailored for beginners and casual players.\n" +
+                "Offers a relaxed, forgiving gameplay experience.\n" +
+                "Provides an accessible entry point to chess.\n" +
+                "The AI makes forgiving moves, ideal for learning.\n" +
+                "Allows ample time to contemplate and plan moves.\n" +
+                "A slower pace fosters confidence and strategy exploration.\n" +
+                "Perfect for those seeking an enjoyable yet gentle adventure\n";
 
-        easyButton = new JButton("Easy");
-        mediumButton = new JButton("Medium");
-        hardButton = new JButton("Hard");
+        String mediumDesc = "Strikes a balance between challenge and accessibility.\n" +
+                "Tests skills with a moderately competitive AI opponent.\n" +
+                "Suited for players with a moderate grasp of tactics.\n" +
+                "Encourages strategic thinking and careful planning.\n" +
+                "Offers a mix of offensive and defensive AI moves.\n" +
+                "Provides a fair challenge without overwhelming difficulty.\n" +
+                "Ideal for players seeking a stimulating yet manageable game.\n";
 
-        JPanel contentPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
-            }
-        };
-        contentPanel.setLayout(new GridBagLayout()); // Use Y_AXIS for vertical arrangement
+        String hardDesc = "Tailored for seasoned chess enthusiasts.\n" +
+                "Presents a formidable challenge with advanced AI.\n" +
+                "Ramps up difficulty significantly for skilled players.\n" +
+                "Demands astute planning and precise execution.\n" +
+                "Provides an intense, high-stakes chess experience.\n" +
+                "Challenges players to master intricate strategies.\n" +
+                "An arena for honing expertise and pushing boundaries.\n";
 
-        easyButton.setBounds(50, 50, 200, 30);
-        mediumButton.setBounds(50, 100, 200, 30);
-        hardButton.setBounds(50, 150, 200, 30);
+        String imagePath = "project/src/main/java/chess/img/other/";
+        easyPanel = createPanel(imagePath + "easy-back.jpg", "Easy", easyDesc,
+                imagePath + "easy-icon.png");
+        mediumPanel = createPanel(imagePath + "medium-back.jpg", "Medium", mediumDesc,
+                imagePath + "medium-icon.png");
+        hardPanel = createPanel(imagePath + "hard-back.jpg", "Hard", hardDesc,
+                imagePath + "hard-icon.png");
+        easyPanel.addMouseListener(createMouseListener(easyPanel));
+        mediumPanel.addMouseListener(createMouseListener(mediumPanel));
+        hardPanel.addMouseListener(createMouseListener(hardPanel));
+        easyPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+        mediumPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+        hardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
 
-        easyButton.setPreferredSize(new Dimension((int) (width * 0.8), height / 3));
-        easyButton.setBackground(new Color(75, 0, 130));
-        easyButton.setForeground(Color.WHITE);
-        easyButton.setBorder(BorderFactory.createLineBorder(Color.white, 3, false));
-        easyButton.setFocusPainted(false);
-        easyButton.setBorder(BorderFactory.createLineBorder(Color.white, 3, false));
+        add(easyPanel);
+        add(mediumPanel);
+        add(hardPanel);
 
-        mediumButton.setPreferredSize(new Dimension((int) (width * 0.8), height / 3));
-        mediumButton.setBackground(new Color(75, 0, 130));
-        mediumButton.setForeground(Color.WHITE);
-        mediumButton.setBorder(BorderFactory.createLineBorder(Color.white, 3, false));
-        mediumButton.setFocusPainted(false);
-        mediumButton.setBorder(BorderFactory.createLineBorder(Color.white, 3, false));
-
-        hardButton.setPreferredSize(new Dimension((int) (width * 0.8), height / 3));
-        hardButton.setBackground(new Color(75, 0, 130));
-        hardButton.setForeground(Color.WHITE);
-        hardButton.setBorder(BorderFactory.createLineBorder(Color.white, 3, false));
-        hardButton.setFocusPainted(false);
-        hardButton.setBorder(BorderFactory.createLineBorder(Color.white, 3, false));
-
-        ImageIcon logoImage = createImageIcon("img/other/chess-logo.png");
-        Image resizedLogo = logoImage.getImage().getScaledInstance((int) (width * 1.3), -1, Image.SCALE_SMOOTH);
-        ImageIcon resizedIcon = new ImageIcon(resizedLogo);
-        JLabel logoLabel = new JLabel(resizedIcon);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 5, 5, 5);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        contentPanel.add(logoLabel, gbc);
-        gbc.gridy++;
-        contentPanel.add(easyButton, gbc);
-        gbc.insets = new Insets(50, 5, 5, 5);
-        gbc.gridy++;
-        contentPanel.add(mediumButton, gbc);
-        gbc.gridy++;
-        contentPanel.add(hardButton, gbc);
-        add(contentPanel);
-        addActionListeners();
-        addMouseListeners();
-        pack();
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximize the frame
         setVisible(true);
     }
 
-    private void addActionListeners() {
-        easyButton.addActionListener(e -> {
-            SwingUtilities.invokeLater(() -> new ChooseSideMenu("EASY"));
-            dispose();
-        });
+    private JPanel createPanel(String backgroundPath, String title, String description, String iconPath) {
+        ImageIcon backgroundImage = new ImageIcon(backgroundPath);
+        ImageIcon icon = new ImageIcon(iconPath);
+        Image scaledIcon = icon.getImage().getScaledInstance(280, 280, Image.SCALE_SMOOTH);
+        ImageIcon scaledIconImage = new ImageIcon(scaledIcon);
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
 
-        mediumButton.addActionListener(e -> {
-            SwingUtilities.invokeLater(() -> new ChooseSideMenu("MEDIUM"));
-            dispose();
-        });
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        hardButton.addActionListener(e -> {
-            SwingUtilities.invokeLater(() -> new ChooseSideMenu("HARD"));
-            dispose();
-        });
-    }
+                int w = getWidth();
+                int h = getHeight();
 
-    private void addMouseListeners() {
-        easyButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                easyButton.setBackground(new Color(90, 0, 200)); // Change background color on hover
+                g2d.drawImage(backgroundImage.getImage(), 0, 0, w, h, this);
+
+                AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+                g2d.setComposite(composite);
+                g2d.setColor(new Color(240, 240, 240, 150)); // A shade closer to white
+
+                if (alpha > 0.0f && hoveredPanel == this) {
+                    int borderSize = 10;
+                    g2d.fillRect(0, 0, borderSize, h); // Left border
+                    g2d.fillRect(w - borderSize, 0, borderSize, h); // Right border
+                    g2d.fillRect(0, 0, w, borderSize); // Top border
+                    g2d.fillRect(0, h - borderSize, w, borderSize); // Bottom border
+                }
+
+                g2d.dispose();
             }
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                easyButton.setBackground(new Color(75, 0, 130)); // Restore the original background color
-            }
-        });
-
-        mediumButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                mediumButton.setBackground(new Color(90, 0, 200)); // Change background color on hover
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(200, 300); // Customize the panel size
             }
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                mediumButton.setBackground(new Color(75, 0, 130)); // Restore the original background color
-            }
-        });
+        };
+        panel.setLayout(new BorderLayout());
 
-        hardButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                hardButton.setBackground(new Color(90, 0, 200)); // Change background color on hover
-            }
+        JLabel iconLabel = new JLabel(scaledIconImage);
+        iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(iconLabel, BorderLayout.NORTH);
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                hardButton.setBackground(new Color(75, 0, 130)); // Restore the original background color
-            }
-        });
-    }
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 70)));
+        Font titleFont = new Font(Font.SANS_SERIF, Font.ITALIC, 70);
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(titleFont);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align horizontally
+        titleLabel.setForeground(Color.WHITE);
+        contentPanel.add(titleLabel);
 
-    protected ImageIcon createImageIcon(String path) {
-        URL imgURL = getClass().getResource(path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            System.err.println("Couldn't find file: " + path);
-            return null;
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        Font descriptionFont = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+        JLabel descriptionLabel = new JLabel("<html>" + description.replaceAll("\n", "<br>") + "</html>");
+        descriptionLabel.setFont(descriptionFont);
+        descriptionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        descriptionLabel.setForeground(new Color(255, 255, 255)); // White color
+        descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        descriptionLabel.setVerticalAlignment(SwingConstants.TOP);
+        contentPanel.add(descriptionLabel);
+
+        contentPanel.setOpaque(false);
+
+        panel.add(contentPanel, BorderLayout.CENTER);
+
+        JButton button = new JButton(title);
+        if (title.equals("Easy")) {
+            button.setBackground(new Color(100, 200, 100)); // Green color for Easy
+        } else if (title.equals("Medium")) {
+            button.setBackground(new Color(200, 200, 100)); // Yellow color for Medium
+        } else if (title.equals("Hard")) {
+            button.setBackground(new Color(255, 100, 100)); // Red color for Hard
         }
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+        panel.add(button, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private MouseAdapter createMouseListener(JPanel panel) {
+        return new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (hoveredPanel == null) {
+                    hoveredPanel = panel;
+                    alpha = 1.0f;
+                    panel.repaint();
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (hoveredPanel == panel) {
+                    hoveredPanel = null;
+                    alpha = 0.0f;
+                    panel.repaint();
+                }
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Point point = e.getPoint();
+                if (!panel.contains(point) && hoveredPanel == panel) {
+                    hoveredPanel = null;
+                    alpha = 0.0f;
+                    panel.repaint();
+                }
+            }
+        };
     }
 }
